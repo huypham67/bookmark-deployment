@@ -14,14 +14,11 @@ services:
     restart: unless-stopped
 
   bookmark-service:
-    build:
-      context: ../bookmark-service
-      dockerfile: Dockerfile
+    image: huypham053/bookmark-service:v0.0.2
     depends_on:
       redis:
         condition: service_healthy
     env_file:
-      - redis/.env
       - bookmark-service/.env
     networks:
       - bookmark-network
