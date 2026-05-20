@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   bookmark-service:
-    image: huypham053/bookmark-service:v0.0.2
+    image: huypham053/bookmark-service:latest
     depends_on:
       redis:
         condition: service_healthy
