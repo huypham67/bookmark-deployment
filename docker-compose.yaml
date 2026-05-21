@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bookmark-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bookmark-network
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  bookmark-service:
+    image: huypham053/bookmark-service:${TAG:-latest}
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - bookmark-service/.env
+    networks:
+      - bookmark-network
+    restart: unless-stopped
+
+  portal:
+    image: ebvn/bookmark-app-portal:mono
+    container_name: bookmark-portal
+    depends_on:
+      - bookmark-service
+    networks:
+      - bookmark-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: bookmark-nginx
+    depends_on:
+      - bookmark-service
+      - portal
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    networks:
+      - bookmark-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  bookmark-network:
+    driver: bridge
+
