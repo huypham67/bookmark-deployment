@@ -41,8 +41,16 @@ services:
       - portal
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "80:80"
+    networks:
+      - bookmark-network
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: bookmark-cloudflared
+    env_file:
+      - ./config/cloudflared.env
+    command: tunnel --no-autoupdate --protocol http2 run
     networks:
       - bookmark-network
     restart: unless-stopped
