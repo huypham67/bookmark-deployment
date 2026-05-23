@@ -1,4 +1,22 @@
 services:
+  bookmark-db:
+    image: postgres:16-alpine
+    container_name: bookmark-db
+    env_file:
+      - postgres/.env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - bookmark-network
+    volumes:
+      - bookmark_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     container_name: bookmark-redis
@@ -7,6 +25,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    ports:
+      - "6379:6379"
     networks:
       - bookmark-network
     volumes:
@@ -14,8 +34,10 @@ services:
     restart: unless-stopped
 
   bookmark-service:
-    image: huypham053/bookmark-service:${TAG:-latest}
+    image: huypham053/bookmark-service:latest
     depends_on:
+      bookmark-db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     env_file:
@@ -56,6 +78,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  bookmark_db_data:
   redis_data:
 
 networks:
