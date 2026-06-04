@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
 
   bookmark-service:
-    image: huypham053/bookmark-service:latest
+    image: huypham053/bookmark-service:0cd6fb0
     depends_on:
       bookmark-db:
         condition: service_healthy
@@ -44,6 +44,8 @@ services:
       - bookmark-service/.env
     networks:
       - bookmark-network
+    volumes:
+      - ./bookmark-service/keys:/app/keys
     restart: unless-stopped
 
   portal:
@@ -80,6 +82,7 @@ services:
 volumes:
   bookmark_db_data:
   redis_data:
+  cloudbeaver_data:
 
 networks:
   bookmark-network:

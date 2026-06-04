@@ -9,6 +9,8 @@ GitOps-ready deployment configuration for the Bookmark Service application stack
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Environment Configuration](#environment-configuration)
+- [Database Setup](#database-setup)
+- [JWT RSA Key Setup](#jwt-rsa-key-setup)
 - [Project Structure](#project-structure)
 - [Services](#services)
 - [Deployment](#deployment)
@@ -156,6 +158,84 @@ REDIS_DATABASE=0
 
 ---
 
+## 🗄️ Database Setup
+
+### PostgreSQL Configuration
+
+**File**: `postgres/.env`
+
+The bookmark-service requires PostgreSQL database for user management and authentication.
+
+```env
+# PostgreSQL Configuration
+POSTGRES_USER=bookmark_user
+POSTGRES_PASSWORD=bookmark_password
+POSTGRES_DB=bookmark_db
+POSTGRES_INITDB_ARGS=--encoding=UTF-8 --locale=C
+```
+
+### Database Initialization
+
+PostgreSQL is automatically initialized when the container starts. The database schema includes:
+
+- **Users Table**: Stores user credentials and profile information
+- Automatic migrations: Run by the bookmark-service on startup
+
+### Verification
+
+```bash
+# Connect to PostgreSQL container
+docker-compose exec bookmark-db psql -U bookmark_user -d bookmark_db
+
+# List tables (inside psql console)
+\dt
+
+# Exit psql
+\q
+```
+
+---
+
+## 🔐 JWT RSA Key Setup
+
+### Overview
+
+The bookmark-service uses RSA encryption for JWT token generation and validation. You must generate RSA keys before deployment.
+
+### Quick Setup
+
+```bash
+# Navigate to bookmark-service directory
+cd bookmark-service
+
+# Create keys directory
+mkdir -p keys
+
+# Generate private key (2048-bit RSA)
+openssl genrsa -out keys/private.pem 2048
+
+# Generate public key from private key
+openssl rsa -in keys/private.pem -pubout -out keys/public.pem
+
+# Verify keys exist
+ls -la keys/
+```
+
+### Important Notes
+
+⚠️ **Security Considerations**:
+1. Keep `keys/private.pem` secure - never commit to version control
+2. Add `keys/` to `.gitignore` to prevent accidental commits
+3. Use appropriate file permissions: `chmod 600 keys/private.pem`
+4. Backup your private key securely
+5. Rotate keys periodically in production
+
+### Full Documentation
+
+For detailed RSA key generation guide with troubleshooting, see: [RSA Key Generation Guide](./RSA-KEY-GENERATION.md)
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -186,6 +266,15 @@ deployment/
 ---
 
 ## 🔌 Services
+
+### PostgreSQL Database
+- **Container**: `bookmark-db`
+- **Image**: `postgres:16-alpine`
+- **Port**: `5432` (internal only)
+- **Health Check**: PostgreSQL readiness check every 10s
+- **Volume**: `bookmark_db_data` (persistent storage)
+- **Restart Policy**: `unless-stopped`
+- **Authentication**: Configured via `postgres/.env`
 
 ### Redis
 - **Container**: `bookmark-redis`
