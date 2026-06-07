@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
 
   bookmark-service:
-    image: huypham053/bookmark-service:0cd6fb0
+    image: huypham053/bookmark-service:bc13ae5
     depends_on:
       bookmark-db:
         condition: service_healthy
